@@ -1,0 +1,57 @@
+[gd_scene format=3 uid="uid://ck5jff4pi35qn"]
+
+[ext_resource type="Script" uid="uid://b7libvis4u51w" path="res://scripts/main/splash_screen.gd" id="1_splash"]
+[ext_resource type="PackedScene" path="res://scenes/components/mascot.tscn" id="2_lumi"]
+[ext_resource type="Texture2D" uid="uid://co60dfcw78tgi" path="res://assets/backgrounds/literaku_splash_bg_1280x720.png" id="3_background"]
+[ext_resource type="Texture2D" path="res://assets/images/investakidz_literaku_logo.png" id="4_logo"]
+
+[node name="SplashScreen" type="Control" unique_id=1401112902]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_splash")
+
+[node name="Background" type="TextureRect" parent="." unique_id=1976534339]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_background")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Center" type="VBoxContainer" parent="." unique_id=265013923]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 260.0
+offset_top = 110.0
+offset_right = -260.0
+offset_bottom = -70.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="Lumi" parent="Center" unique_id=1676862068 instance=ExtResource("2_lumi")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="Logo" type="TextureRect" parent="Center" unique_id=1293683574]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(500, 198)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("4_logo")
+expand_mode = 1
+stretch_mode = 5
+

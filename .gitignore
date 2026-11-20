@@ -1,0 +1,14 @@
+
+# Godot cache
+.godot/
+
+# Android build
+/android/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Temporary files
+*.tmp
+*.log
