@@ -9,6 +9,9 @@ const MENU_VOLUME_DB := -22.0
 const BUTTON_VOLUME_DB := -17.0
 const VOICE_VOLUME_DB := -7.0
 
+# Pelafalan untuk kata yang ejaannya tidak biasa (dipakai saat suara dibacakan browser).
+const SPOKEN_WORDS := {"QUEEN": "Kuin", "XILOFON": "Silofon", "DINOSAURUS": "Dinosaurus", "WAYANG": "Wayang"}
+
 # Suara sapaan (file ada di res://audio/voice/ui/)
 const WELCOME_ID := "ui/welcome"
 const WELCOME_TEXT := "Selamat datang di ruang belajar Literaku!"
@@ -41,6 +44,7 @@ func _ready() -> void:
 	voice_player.finished.connect(_play_next_queued_audio)
 	get_tree().node_added.connect(_on_node_added)
 	call_deferred("_register_existing_buttons")
+	_tts_setup()
 
 
 func _make_player(player_name: String, volume: float) -> AudioStreamPlayer:
@@ -53,6 +57,8 @@ func _make_player(player_name: String, volume: float) -> AudioStreamPlayer:
 
 func toggle_sound() -> bool:
 	sound_enabled = not sound_enabled
+	if not sound_enabled:
+		_tts_stop()
 	for player in [menu_music, menu_intro, button_sfx, voice_player]:
 		if player:
 			player.stream_paused = not sound_enabled
@@ -106,6 +112,7 @@ func _play_menu_music_after_intro() -> void:
 
 
 func play_button() -> void:
+	_warm_up_tts()
 	if not sound_enabled:
 		return
 	if button_sfx.stream == null:
@@ -146,8 +153,109 @@ func play_letter(letter: String) -> void:
 	play_audio("letters/%s" % letter.to_upper(), "%s!" % letter.to_upper(), true)
 
 
+# Suara kartu abjad bergambar Level 1 (nama benda sesuai gambar).
+func play_card_word(letter: String) -> void:
+	var word := AlphabetData.card_word(letter)
+	var audio_id := "words/%s" % word.to_upper()
+	# Kalau rekaman audio/voice/words/APEL.mp3 (dst.) ada, pakai rekaman itu.
+	if _load_voice_stream(audio_id) != null:
+		play_audio(audio_id, "%s!" % word, true)
+		return
+	# Belum ada rekaman: ucapkan nama bendanya dengan suara bahasa Indonesia dari browser.
+	last_audio_id = audio_id
+	last_audio_text = "%s!" % word
+	queued_audio.clear()
+	if voice_player.playing:
+		voice_player.stop()
+	_speak_with_tts(str(SPOKEN_WORDS.get(word.to_upper(), word)))
+
+
 func play_word(word: String) -> void:
 	play_audio("words/%s" % word.to_upper(), "%s!" % word.capitalize(), true)
+
+
+const TTS_PITCH := 1.7  # nada tinggi: suara anak perempuan
+const TTS_RATE := 1.0
+
+var _tts_warmed := false
+
+# JS dipasang sekali: memilih suara bahasa Indonesia (prioritas suara lokal/perempuan
+# supaya cepat), lalu menyiapkan fungsi bicara dan berhenti.
+const TTS_JS_SETUP := """
+(function () {
+  if (window.literakuSpeak) { return; }
+  var chosen = null;
+  function score(v) {
+    var s = 0;
+    if (v.localService) { s += 4; }
+    if (/gadis|damayanti|female|wanita|perempuan/i.test(v.name)) { s += 3; }
+    if (/andika|male|pria|laki/i.test(v.name)) { s -= 3; }
+    return s;
+  }
+  function pick() {
+    if (!window.speechSynthesis) { return; }
+    var all = speechSynthesis.getVoices();
+    var pool = all.filter(function (v) { return /^(id|in)([-_]|$)/i.test(v.lang); });
+    if (!pool.length) { pool = all.filter(function (v) { return /^ms([-_]|$)/i.test(v.lang); }); }
+    pool.sort(function (a, b) { return score(b) - score(a); });
+    chosen = pool[0] || null;
+  }
+  pick();
+  if (window.speechSynthesis) { speechSynthesis.onvoiceschanged = pick; }
+  window.literakuStop = function () {
+    try { if (speechSynthesis.speaking || speechSynthesis.pending) { speechSynthesis.cancel(); } } catch (e) {}
+  };
+  window.literakuSpeak = function (text, pitch, rate, volume) {
+    try {
+      if (!window.speechSynthesis) { return; }
+      window.literakuStop();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = 'id-ID';
+      if (chosen) { u.voice = chosen; }
+      u.pitch = pitch; u.rate = rate; u.volume = volume;
+      speechSynthesis.speak(u);
+    } catch (e) {}
+  };
+})();
+"""
+
+
+func _tts_setup() -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval(TTS_JS_SETUP)
+
+
+func _tts_stop() -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("if (window.literakuStop) { window.literakuStop(); }")
+	elif DisplayServer.get_name() != "headless":
+		DisplayServer.tts_stop()
+
+
+# Dipanggil pada tekanan tombol pertama (gesture pemain) supaya mesin suara browser
+# sudah "hangat" dan suara benda langsung keluar tanpa jeda.
+func _warm_up_tts() -> void:
+	if _tts_warmed:
+		return
+	_tts_warmed = true
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("if (window.literakuSpeak) { window.literakuSpeak(' ', 1, 1, 0); }")
+
+
+func _speak_with_tts(text: String) -> void:
+	if not sound_enabled:
+		return
+	var spoken := text + "!"
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("if (window.literakuSpeak) { window.literakuSpeak(%s, %s, %s, 1); }" % [JSON.stringify(spoken), TTS_PITCH, TTS_RATE])
+	elif DisplayServer.get_name() != "headless":
+		var voice_id := ""
+		for language in ["id", "in", "ms"]:
+			var voices := DisplayServer.tts_get_voices_for_language(language)
+			if not voices.is_empty():
+				voice_id = voices[0]
+				break
+		DisplayServer.tts_speak(spoken, voice_id, 100, TTS_PITCH, TTS_RATE, 0, true)
 
 
 func play_feedback_correct(text := "Hebat! Kamu berhasil!") -> void:
@@ -172,6 +280,7 @@ func play_success() -> void:
 
 func stop_audio() -> void:
 	_delayed_voice_token += 1  # batalkan suara yang masih menunggu jeda
+	_tts_stop()
 	queued_audio.clear()
 	if voice_player.playing:
 		voice_player.stop()
@@ -187,6 +296,7 @@ func play_audio(audio_id: String, fallback_text: String, interrupt := true) -> v
 	last_audio_text = fallback_text
 	if interrupt:
 		queued_audio.clear()
+		_tts_stop()
 		if voice_player.playing:
 			voice_player.stop()
 		_play_voice_or_fallback(audio_id, fallback_text)
