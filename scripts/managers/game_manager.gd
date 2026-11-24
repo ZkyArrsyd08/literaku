@@ -32,6 +32,7 @@ func _enable_auto_fullscreen_landscape() -> void:
 	JavaScriptBridge.eval(AUTO_FULLSCREEN_JS)
 
 
+<<<<<<< HEAD
 # Tombol layar penuh: sekali tekan masuk layar penuh, tekan lagi keluar.
 func toggle_fullscreen() -> void:
 	if OS.has_feature("web"):
@@ -66,6 +67,8 @@ const TOGGLE_FULLSCREEN_JS := """
 """
 
 
+=======
+>>>>>>> origin/main
 const AUTO_FULLSCREEN_JS := """
 (function () {
   if (window.literakuFsInstalled) { return; }
