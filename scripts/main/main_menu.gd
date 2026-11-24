@@ -84,9 +84,7 @@ func _make_sound_toggle_button() -> TextureButton:
 
 
 func _set_fullscreen_landscape() -> void:
-	DisplayServer.screen_set_orientation(DisplayServer.SCREEN_LANDSCAPE)
-	if DisplayServer.get_name() != "headless":
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	GameManager.toggle_fullscreen()
 
 
 func _toggle_sound() -> void:

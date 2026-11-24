@@ -82,6 +82,7 @@ func build_screen() -> void:
 		"pencil_home": GameManager.open_screen("writing_selection")
 		"learning_selection": build_letter_selection("Pilih Huruf", false)
 		"letter_detail": build_detail()
+		"collection_detail": build_detail(true)
 		"matching": build_matching()
 		"hunt": build_hunt()
 		"writing_selection": build_letter_selection("Pilih Huruf untuk Ditulis", true)
@@ -92,9 +93,7 @@ func build_screen() -> void:
 
 
 func _set_fullscreen_landscape() -> void:
-	DisplayServer.screen_set_orientation(DisplayServer.SCREEN_LANDSCAPE)
-	if DisplayServer.get_name() != "headless":
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	GameManager.toggle_fullscreen()
 
 
 func build_activities() -> void:
@@ -133,26 +132,15 @@ func build_activities() -> void:
 		var entry_variant = activities[index]
 		var entry: Dictionary = entry_variant
 		var screen: String = entry.screen
-		var is_locked := not ProgressManager.is_level_unlocked(index + 1)
 		var activity_button := make_activity_button(entry.asset, func() -> void:
-			if is_locked:
-				_show_level_one_required()
-			else:
-				if screen == "learning_selection":
-					GameManager.level1_intro_pending = true
-				GameManager.open_screen(screen)
+			if screen == "learning_selection":
+				GameManager.level1_intro_pending = true
+			GameManager.open_screen(screen)
 		)
-		if is_locked:
-			activity_button.modulate = Color(0.48, 0.48, 0.48, 1.0)
-			activity_button.tooltip_text = "Selesaikan Level %d terlebih dahulu" % index
 		if index < 2:
 			first_row.add_child(activity_button)
 		else:
 			second_row.add_child(activity_button)
-
-
-func _show_level_one_required() -> void:
-	show_feedback("Level ini masih terkunci. Yuk, mainkan Level 1 dulu!", Callable())
 
 
 func make_activity_button(texture_path: String, action: Callable) -> TextureButton:
@@ -577,13 +565,20 @@ func open_letter(letter: String, writing: bool) -> void:
 
 
 func open_letter_detail_with_audio(letter: String) -> void:
-	AudioManager.play_letter(letter)
+	# Tombol Sebelumnya/Selanjutnya: huruf langsung dianggap sudah dipelajari
+	# (hijau di Buku Koleksi) tanpa harus menekan kartunya dulu.
+	ProgressManager.mark_learned(letter)
+	AudioManager.play_card_word(letter)
 	GameManager.open_screen("letter_detail", letter)
 
 
-func build_detail() -> void:
+func build_detail(single_card := false) -> void:
 	var info := AlphabetData.info(GameManager.selected_letter)
-	make_title("Huruf %s/%s" % [info.upper, info.lower], "Tekan bagian huruf untuk mendengarkan bunyinya")
+	# Cukup membuka halaman huruf ini sudah membuatnya hijau di Buku Koleksi.
+	# (Dari Buku Koleksi hanya satu kartu yang tampil, tanpa tombol sebelumnya/selanjutnya.)
+	if not single_card:
+		ProgressManager.mark_learned(info.upper)
+	make_title("Huruf %s/%s" % [info.upper, info.lower], "Tekan gambar untuk mendengarkan nama bendanya")
 	var card := Control.new()
 	card.custom_minimum_size = Vector2(330, 385)
 	card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -598,12 +593,14 @@ func build_detail() -> void:
 	card.add_child(art)
 	var letter_audio := Button.new()
 	letter_audio.flat = true
-	letter_audio.tooltip_text = "Dengarkan huruf %s" % info.upper
+	letter_audio.tooltip_text = "Dengarkan %s" % AlphabetData.card_word(info.upper)
 	# Seluruh kartu huruf dan gambarnya dapat disentuh, bukan hanya area huruf.
 	letter_audio.position = Vector2.ZERO
 	letter_audio.size = card.custom_minimum_size
-	letter_audio.pressed.connect(func() -> void: AudioManager.play_letter(info.upper))
+	letter_audio.pressed.connect(func() -> void: AudioManager.play_card_word(info.upper))
 	card.add_child(letter_audio)
+	if single_card:
+		return
 	var actions := HBoxContainer.new(); actions.alignment = BoxContainer.ALIGNMENT_CENTER; content.add_child(actions)
 	var letters := AlphabetData.letters()
 	var current_index := letters.find(info.upper)
@@ -771,8 +768,8 @@ func build_collection() -> void:
 		card.disabled = not is_played
 		card.modulate = Color(0.68, 1.0, 0.68, 1.0) if is_played else Color(0.5, 0.5, 0.5, 1.0)
 		if is_played:
-			card.pressed.connect(func() -> void: GameManager.open_screen("letter_detail", chosen))
-			card.pressed.connect(func() -> void: AudioManager.play_letter(chosen))
+			card.pressed.connect(func() -> void: GameManager.open_screen("collection_detail", chosen))
+			card.pressed.connect(func() -> void: AudioManager.play_card_word(chosen))
 			card.mouse_entered.connect(func() -> void: animate_texture_button(card, 1.04))
 			card.mouse_exited.connect(func() -> void: animate_texture_button(card, 1.0))
 		grid.add_child(card)
@@ -814,7 +811,7 @@ func show_feedback(message: String, next: Callable) -> void:
 
 
 func go_back() -> void:
-	var previous := {"activities":"main_menu", "match_picture":"activities", "listen_find":"activities", "letter_pairs":"activities", "word_builder":"activities", "letter_detail":"learning_selection", "matching":"letter_detail", "hunt":"activities", "writing_selection":"activities", "case_selection":"writing_selection", "tracing":"case_selection", "collection":"main_menu"}
+	var previous := {"activities":"main_menu", "match_picture":"activities", "listen_find":"activities", "letter_pairs":"activities", "word_builder":"activities", "letter_detail":"learning_selection", "collection_detail":"collection", "matching":"letter_detail", "hunt":"activities", "writing_selection":"activities", "case_selection":"writing_selection", "tracing":"case_selection", "collection":"main_menu"}
 	var destination: String = previous.get(GameManager.current_screen, "activities")
 	if destination == "main_menu": GameManager.go_to(destination)
 	elif destination == "activities": GameManager.open_screen(destination)
