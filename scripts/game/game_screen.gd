@@ -103,7 +103,6 @@ func _set_fullscreen_landscape() -> void:
 
 const LEVEL_INTROS := {"listen_find": "level2_intro", "letter_pairs": "level3_intro", "writing_selection": "level4_intro"}
 
-
 func build_activities() -> void:
 	var title_slot := Control.new()
 	title_slot.custom_minimum_size = Vector2(720, 150)
@@ -145,6 +144,7 @@ func build_activities() -> void:
 				GameManager.level1_intro_pending = true
 			elif LEVEL_INTROS.has(screen):
 				GameManager.pending_intro = LEVEL_INTROS[screen]
+
 			GameManager.open_screen(screen)
 		)
 		if index < 2:
@@ -587,6 +587,7 @@ func _make_audio_card(texture_path: String, tooltip: String, action: Callable, c
 	button.flat = true
 	button.custom_minimum_size = card_size
 	button.tooltip_text = tooltip
+
 	var art := TextureRect.new()
 	art.texture = load(texture_path)
 	art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -594,36 +595,67 @@ func _make_audio_card(texture_path: String, tooltip: String, action: Callable, c
 	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	button.add_child(art)
+
 	button.pressed.connect(action)
 	return button
 
 
 func build_detail(single_card := false) -> void:
 	var info := AlphabetData.info(GameManager.selected_letter)
-	# Cukup membuka halaman huruf ini sudah membuatnya hijau di Buku Koleksi.
-	# (Dari Buku Koleksi hanya satu kartu yang tampil, tanpa tombol sebelumnya/selanjutnya.)
+	# Membuka halaman huruf dari Level 1 menandai huruf sebagai sudah dipelajari.
+	# Halaman detail dari Buku Koleksi tidak perlu mengubah status tersebut.
 	if not single_card:
 		ProgressManager.mark_learned(info.upper)
+
 	make_title("Huruf %s/%s" % [info.upper, info.lower], "Kartu kiri bunyi huruf, kartu kanan nama benda")
-	# Dua kartu bersebelahan: kiri = kartu huruf (suara huruf), kanan = kartu benda (suara benda).
+
+	# Dua kartu bersebelahan: kiri untuk audio huruf, kanan untuk audio nama benda.
 	var cards := HBoxContainer.new()
 	cards.alignment = BoxContainer.ALIGNMENT_CENTER
 	cards.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	cards.add_theme_constant_override("separation", 26)
 	content.add_child(cards)
+
 	var card_size := Vector2(290, 335)
-	cards.add_child(_make_audio_card("res://assets/ui/alphabet/letter_card/%s.png" % info.upper, "Dengarkan huruf %s" % info.upper, func() -> void: AudioManager.play_letter(info.upper), card_size))
-	cards.add_child(_make_audio_card("res://assets/ui/alphabet/illustrated/%s.png" % info.upper, "Dengarkan %s" % AlphabetData.card_word(info.upper), func() -> void: AudioManager.play_card_word(info.upper), card_size))
+	cards.add_child(_make_audio_card(
+		"res://assets/ui/alphabet/letter_card/%s.png" % info.upper,
+		"Dengarkan huruf %s" % info.upper,
+		func() -> void: AudioManager.play_letter(info.upper),
+		card_size
+	))
+	cards.add_child(_make_audio_card(
+		"res://assets/ui/alphabet/illustrated/%s.png" % info.upper,
+		"Dengarkan %s" % AlphabetData.card_word(info.upper),
+		func() -> void: AudioManager.play_card_word(info.upper),
+		card_size
+	))
+
 	if single_card:
 		return
-	var actions := HBoxContainer.new(); actions.alignment = BoxContainer.ALIGNMENT_CENTER; content.add_child(actions)
+
+	var actions := HBoxContainer.new()
+	actions.alignment = BoxContainer.ALIGNMENT_CENTER
+	content.add_child(actions)
+
 	var letters := AlphabetData.letters()
 	var current_index := letters.find(info.upper)
 	actions.add_theme_constant_override("separation", 18)
-	var previous_button := make_art_button("res://assets/ui/navigation/sebelumnya.png", func() -> void: open_letter_detail_with_audio(letters[maxi(0, current_index - 1)]), Vector2(205, 82), "Huruf sebelumnya")
-	var next_button := make_art_button("res://assets/ui/navigation/selanjutnya.png", func() -> void: open_letter_detail_with_audio(letters[mini(25, current_index + 1)]), Vector2(205, 82), "Huruf selanjutnya")
-	previous_button.disabled = current_index == 0
-	next_button.disabled = current_index == 25
+
+	var previous_button := make_art_button(
+		"res://assets/ui/navigation/sebelumnya.png",
+		func() -> void: open_letter_detail_with_audio(letters[maxi(0, current_index - 1)]),
+		Vector2(205, 82),
+		"Huruf sebelumnya"
+	)
+	var next_button := make_art_button(
+		"res://assets/ui/navigation/selanjutnya.png",
+		func() -> void: open_letter_detail_with_audio(letters[mini(letters.size() - 1, current_index + 1)]),
+		Vector2(205, 82),
+		"Huruf selanjutnya"
+	)
+
+	previous_button.disabled = current_index <= 0
+	next_button.disabled = current_index >= letters.size() - 1
 	actions.add_child(previous_button)
 	actions.add_child(next_button)
 

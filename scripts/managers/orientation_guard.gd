@@ -90,6 +90,7 @@ func _build_overlay() -> void:
 	_overlay.add_child(center)
 
 	var box := VBoxContainer.new()
+<<<<<<< HEAD
 	box.add_theme_constant_override("separation", 48)
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	center.add_child(box)
@@ -112,6 +113,29 @@ func _build_overlay() -> void:
 	screen.position = Vector2(20, 44)
 	screen.size = Vector2(180, 282)
 	screen.add_theme_stylebox_override("panel", _style(Color(0.36, 0.78, 1.0), 20, Color(0, 0, 0, 0), 0))
+=======
+	box.add_theme_constant_override("separation", 28)
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	center.add_child(box)
+
+	# Wadah persegi supaya HP bisa berputar tanpa menggeser teks.
+	var holder := Control.new()
+	holder.custom_minimum_size = Vector2(260, 260)
+	box.add_child(holder)
+
+	_phone = Panel.new()
+	_phone.custom_minimum_size = Vector2(110, 190)
+	_phone.size = Vector2(110, 190)
+	_phone.position = Vector2(75, 35)
+	_phone.pivot_offset = Vector2(55, 95)
+	_phone.add_theme_stylebox_override("panel", _style(Color(1, 1, 1), 22, Color(1.0, 0.78, 0.34), 7))
+	holder.add_child(_phone)
+
+	var screen := Panel.new()
+	screen.position = Vector2(10, 22)
+	screen.size = Vector2(90, 140)
+	screen.add_theme_stylebox_override("panel", _style(Color(0.36, 0.78, 1.0), 10, Color(0, 0, 0, 0), 0))
+>>>>>>> origin/main
 	_phone.add_child(screen)
 
 	var letters := Label.new()
@@ -119,7 +143,11 @@ func _build_overlay() -> void:
 	letters.set_anchors_preset(Control.PRESET_FULL_RECT)
 	letters.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	letters.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+<<<<<<< HEAD
 	letters.add_theme_font_size_override("font_size", 84)
+=======
+	letters.add_theme_font_size_override("font_size", 38)
+>>>>>>> origin/main
 	letters.add_theme_color_override("font_color", Color(1, 1, 1))
 	screen.add_child(letters)
 
@@ -127,17 +155,26 @@ func _build_overlay() -> void:
 	title.text = "Putar HP kamu ke mode landscape"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+<<<<<<< HEAD
 	title.custom_minimum_size = Vector2(1000, 0)
 	title.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	title.add_theme_font_size_override("font_size", 78)
+=======
+	title.custom_minimum_size = Vector2(560, 0)
+	title.add_theme_font_size_override("font_size", 40)
+>>>>>>> origin/main
 	title.add_theme_color_override("font_color", Color(1, 1, 1))
 	box.add_child(title)
 
 	var hint := Label.new()
 	hint.text = "Biar kamu bisa mulai bermain"
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+<<<<<<< HEAD
 	hint.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	hint.add_theme_font_size_override("font_size", 54)
+=======
+	hint.add_theme_font_size_override("font_size", 28)
+>>>>>>> origin/main
 	hint.add_theme_color_override("font_color", Color(1.0, 0.85, 0.5))
 	box.add_child(hint)
 

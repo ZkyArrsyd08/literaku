@@ -1,7 +1,7 @@
 class_name AlphabetData
 extends RefCounted
 
-const WORDS := ["Apel", "Bola", "Cicak", "Domba", "Elang", "Flamingo", "Gajah", "Harimau", "Ikan", "Jeruk", "Kucing", "Lebah", "Mobil", "Nanas", "Obor", "Pisang", "Quran", "Roti", "Sapi", "Topi", "Ular", "Vas", "Wortel", "Xilofon", "Yoyo", "Zebra"]
+const WORDS := ["Apel", "Bola", "Cicak", "Domba", "Elang", "Flaminggo", "Gajah", "Harimau", "Ikan", "Jeruk", "Kucing", "Lebah", "Mobil", "Nanas", "Obor", "Pisang", "Quran", "Roti", "Sapi", "Topi", "Ular", "Vas", "Wortel", "Xilofon", "Yoyo", "Zebra"]
 const EMOJIS := ["🍎", "⚽", "🦎", "🐑", "🦅", "🦩", "🐘", "🐯", "🐟", "🍊", "🐱", "🐝", "🚗", "🍍", "🔥", "🍌", "📖", "🍞", "🐄", "🎩", "🐍", "🏺", "🥕", "🎼", "🪀", "🦓"]
 
 
