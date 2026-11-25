@@ -57,17 +57,9 @@ func has_started_level_one() -> bool:
 	return learned.size() >= 26
 
 
-func is_level_unlocked(level_number: int) -> bool:
-	match level_number:
-		1:
-			return true
-		2:
-			return is_level_completed(1)
-		3:
-			return is_level_completed(2)
-		4:
-			return is_level_completed(3)
-	return false
+func is_level_unlocked(_level_number: int) -> bool:
+	# Semua level terbuka sejak awal; tidak perlu menyelesaikan Level 1 dulu.
+	return true
 
 
 func is_level_completed(level_number: int) -> bool:

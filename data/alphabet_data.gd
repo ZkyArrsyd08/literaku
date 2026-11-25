@@ -5,6 +5,15 @@ const WORDS := ["Apel", "Bola", "Cicak", "Domba", "Elang", "Flamingo", "Gajah", 
 const EMOJIS := ["🍎", "⚽", "🦎", "🐑", "🦅", "🦩", "🐘", "🐯", "🐟", "🍊", "🐱", "🐝", "🚗", "🍍", "🔥", "🍌", "📖", "🍞", "🐄", "🎩", "🐍", "🏺", "🥕", "🎼", "🪀", "🦓"]
 
 
+# Nama benda persis seperti tulisan di kartu bergambar (assets/ui/alphabet/illustrated).
+# Dipakai hanya untuk suara kartu abjad bergambar di Level 1.
+const CARD_WORDS := ["Apel", "Bola", "Cacing", "Dinosaurus", "Elang", "Flaminggo", "Gajah", "Harimau", "Ikan", "Jeli", "Kangguru", "Landak", "Mangga", "Nanas", "Obor", "Panda", "Queen", "Robot", "Singa", "Tikus", "Ular", "Vas", "Wayang", "Xilofon", "Yoyo", "Zebra"]
+
+
+static func card_word(letter: String) -> String:
+	return CARD_WORDS[clampi(letter.to_upper().unicode_at(0) - 65, 0, 25)]
+
+
 static func letters() -> PackedStringArray:
 	return PackedStringArray("ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("", false))
 
