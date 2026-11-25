@@ -102,6 +102,7 @@ func _set_fullscreen_landscape() -> void:
 
 
 const LEVEL_INTROS := {"listen_find": "level2_intro", "letter_pairs": "level3_intro", "writing_selection": "level4_intro"}
+=======
 
 
 func build_activities() -> void:
@@ -143,8 +144,10 @@ func build_activities() -> void:
 		var activity_button := make_activity_button(entry.asset, func() -> void:
 			if screen == "learning_selection":
 				GameManager.level1_intro_pending = true
+
 			elif LEVEL_INTROS.has(screen):
 				GameManager.pending_intro = LEVEL_INTROS[screen]
+=======
 			GameManager.open_screen(screen)
 		)
 		if index < 2:
@@ -587,6 +590,23 @@ func _make_audio_card(texture_path: String, tooltip: String, action: Callable, c
 	button.flat = true
 	button.custom_minimum_size = card_size
 	button.tooltip_text = tooltip
+=======
+	AudioManager.play_card_word(letter)
+	GameManager.open_screen("letter_detail", letter)
+
+
+func build_detail(single_card := false) -> void:
+	var info := AlphabetData.info(GameManager.selected_letter)
+	# Cukup membuka halaman huruf ini sudah membuatnya hijau di Buku Koleksi.
+	# (Dari Buku Koleksi hanya satu kartu yang tampil, tanpa tombol sebelumnya/selanjutnya.)
+	if not single_card:
+		ProgressManager.mark_learned(info.upper)
+	make_title("Huruf %s/%s" % [info.upper, info.lower], "Tekan gambar untuk mendengarkan nama bendanya")
+	var card := Control.new()
+	card.custom_minimum_size = Vector2(330, 385)
+	card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content.add_child(card)
 	var art := TextureRect.new()
 	art.texture = load(texture_path)
 	art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -614,6 +634,17 @@ func build_detail(single_card := false) -> void:
 	var card_size := Vector2(290, 335)
 	cards.add_child(_make_audio_card("res://assets/ui/alphabet/letter_card/%s.png" % info.upper, "Dengarkan huruf %s" % info.upper, func() -> void: AudioManager.play_letter(info.upper), card_size))
 	cards.add_child(_make_audio_card("res://assets/ui/alphabet/illustrated/%s.png" % info.upper, "Dengarkan %s" % AlphabetData.card_word(info.upper), func() -> void: AudioManager.play_card_word(info.upper), card_size))
+=======
+	card.add_child(art)
+	var letter_audio := Button.new()
+	letter_audio.flat = true
+	letter_audio.tooltip_text = "Dengarkan %s" % AlphabetData.card_word(info.upper)
+	# Seluruh kartu huruf dan gambarnya dapat disentuh, bukan hanya area huruf.
+	letter_audio.position = Vector2.ZERO
+	letter_audio.size = card.custom_minimum_size
+	letter_audio.pressed.connect(func() -> void: AudioManager.play_card_word(info.upper))
+	card.add_child(letter_audio)
+>>>>>>> origin/main
 	if single_card:
 		return
 	var actions := HBoxContainer.new(); actions.alignment = BoxContainer.ALIGNMENT_CENTER; content.add_child(actions)
